@@ -1,10 +1,13 @@
 @import url("fontawesome-all.min.css");
+@import url("academicons.min.css");
 @import url("https://fonts.googleapis.com/css?family=Lato:400,400italic,700,700italic|Source+Code+Pro:400");
 
 /*
 	Read Only by HTML5 UP
 	html5up.net | @ajlkn
 	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+	color used before: #191970 for buttons and #0b0b3a for background
+	now using: #282442 for buttons and #131122 for background
 */
 
 html, body, div, span, applet, object,
@@ -1790,7 +1793,7 @@ input, select, textarea {
 	}
 
 	header.major h2 {
-		color: #191970;
+		color: #282442;
 		font-size: 3.5em;
 	}
 
@@ -1853,7 +1856,7 @@ input, select, textarea {
 		input[type="email"]:focus,
 		select:focus,
 		textarea:focus {
-			border-color: #191970;
+			border-color: #282442;
 		}
 
 	select {
@@ -1958,7 +1961,7 @@ input, select, textarea {
 
 		input[type="checkbox"]:focus + label:before,
 		input[type="radio"]:focus + label:before {
-			border-color: #191970;
+			border-color: #282442;
 		}
 
 	input[type="checkbox"] + label:before {
@@ -2408,7 +2411,7 @@ input, select, textarea {
 			}
 
 			ul.feature-icons li:before {
-				background: #191970;
+				background: #282442;
 				border-radius: 100%;
 				color: #ffffff;
 				display: block;
@@ -2625,7 +2628,7 @@ input, select, textarea {
 		input[type="reset"].primary,
 		input[type="button"].primary,
 		.button.primary {
-			background-color: #191970;
+			background-color: #282442;
 			color: #ffffff !important;
 		}
 
@@ -2707,7 +2710,7 @@ input, select, textarea {
 		-webkit-justify-content: space-between;
 		-ms-justify-content: space-between;
 		justify-content: space-between;
-		background: #0b0b3a;
+		background: #131122;
 		color: #ededfc;
 		height: 100%;
 		overflow-y: auto;
@@ -2796,7 +2799,7 @@ input, select, textarea {
 			}
 
 				#header > nav ul li {
-					border-top: solid 2px #0b0b3a;
+					border-top: solid 2px #131122;
 					display: block;
 					padding: 0;
 				}
@@ -2815,7 +2818,7 @@ input, select, textarea {
 
 						#header > nav ul li a.active {
 							background: #fff;
-							color: #191970 !important;
+							color: #282442 !important;
 						}
 
 					#header > nav ul li:first-child {
@@ -3083,7 +3086,7 @@ input, select, textarea {
 					}
 
 					#titleBar .toggle:before {
-						background: #191970;
+						background: #282442;
 						color: #ffffff;
 						content: '\f0c9';
 						display: block;
