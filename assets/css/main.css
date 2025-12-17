@@ -3389,7 +3389,7 @@ input, select, textarea {
 .carousel-container {
 	display: flex;
 	overflow-x: auto;
-	gap: 0;
+	gap: 2em;
 	padding: 1em 0;
 	scrollbar-width: thin;
 	scrollbar-color: #888 #f1f1f1;
@@ -3403,6 +3403,12 @@ input, select, textarea {
 
 .carousel-container article .image {
 	flex: 1;
+	min-height: 400px;
+}
+
+.carousel-container article .inner {
+	flex: 1;
+	padding-left: 2em;
 }
 
 .carousel-container article .inner h4 {

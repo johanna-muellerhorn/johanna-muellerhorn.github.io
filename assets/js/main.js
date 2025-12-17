@@ -160,11 +160,12 @@
 		var $carouselContainer = $('.carousel-container');
 		var $articles = $carouselContainer.find('article');
 		var containerWidth = $carouselContainer.width();
+		var gapPx = 32; // 2em gap
 		var totalSlides = $articles.length;
 		var currentSlide = 0;
 
 		function goToSlide(slideIndex) {
-			$carouselContainer.animate({scrollLeft: slideIndex * containerWidth}, 1000, 'linear');
+			$carouselContainer.animate({scrollLeft: slideIndex * (containerWidth + gapPx)}, 1000, 'linear');
 			currentSlide = slideIndex;
 		}
 
