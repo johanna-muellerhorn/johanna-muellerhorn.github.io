@@ -3324,3 +3324,60 @@ input, select, textarea {
 			}
 
 	}
+
+.talks-by-year {
+	display: flex;
+	flex-wrap: nowrap;
+	overflow-x: auto;
+	gap: 2em;
+	padding-bottom: 1em;
+	scroll-snap-type: x mandatory;
+}
+
+.year {
+	flex: 0 0 300px;
+	scroll-snap-align: start;
+}
+
+.year h5 {
+	margin-bottom: 0.5em;
+	font-weight: bold;
+}
+
+.year ul {
+	padding-left: 0;
+	list-style: none;
+}
+
+.year li {
+	margin-bottom: 1em;
+}
+
+.talk-entry {
+	margin-bottom: 1em;
+}
+
+.talk-date {
+	background: rgba(200, 200, 200, 0.5);
+	padding: 0.25em 0.5em;
+	font-size: 0.9em;
+	display: inline-block;
+	margin-bottom: 0.5em;
+	border-radius: 3px;
+}
+
+.talk-title {
+	font-weight: bold;
+	color: #191970;
+	margin-bottom: 0.25em;
+}
+
+.talk-conference {
+	font-style: italic;
+	margin-bottom: 0.25em;
+}
+
+.talk-type {
+	font-size: 0.9em;
+	color: #666;
+}
