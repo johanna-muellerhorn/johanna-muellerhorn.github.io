@@ -156,4 +156,46 @@
 			}
 		});
 
+	// Research Carousel.
+		var $carouselContainer = $('.carousel-container');
+		var $articles = $carouselContainer.find('article');
+		var containerWidth = $carouselContainer.width();
+		var totalSlides = $articles.length;
+		var currentSlide = 0;
+
+		function goToSlide(slideIndex) {
+			$carouselContainer.animate({scrollLeft: slideIndex * containerWidth}, 1000, 'linear');
+			currentSlide = slideIndex;
+		}
+
+		$('.carousel-prev').on('click', function() {
+			var nextSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+			goToSlide(nextSlide);
+		});
+
+		$('.carousel-next').on('click', function() {
+			var nextSlide = (currentSlide + 1) % totalSlides;
+			goToSlide(nextSlide);
+		});
+
+		// Auto-advance every 10 seconds
+		var autoAdvance = setInterval(function() {
+			$('.carousel-next').trigger('click');
+		}, 10000);
+
+		// Pause and restart on user interaction
+		$carouselContainer.on('scroll', function() {
+			clearInterval(autoAdvance);
+			autoAdvance = setInterval(function() {
+				$('.carousel-next').trigger('click');
+			}, 10000);
+		});
+
+		$('.carousel-prev, .carousel-next').on('click', function() {
+			clearInterval(autoAdvance);
+			autoAdvance = setInterval(function() {
+				$('.carousel-next').trigger('click');
+			}, 10000);
+		});
+
 })(jQuery);
