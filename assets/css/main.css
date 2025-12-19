@@ -3382,6 +3382,138 @@ input, select, textarea {
 	color: #666;
 }
 
+.talk-type a {
+	color: #007bff;
+	text-decoration: none;
+}
+
+.talk-type a:hover {
+	text-decoration: underline;
+}
+
+.publications-by-year {
+	/* Remove horizontal scrolling, make vertical lists */
+}
+
+.publications-by-year .year {
+	flex: none; /* Not flex */
+	width: 100%;
+	margin-bottom: 2em;
+}
+
+.publications-by-year .year h5 {
+	margin-bottom: 0.5em;
+	font-weight: bold;
+}
+
+.publications-by-year .year ul {
+	padding-left: 0;
+	list-style: none;
+}
+
+.publications-by-year .year li {
+	margin-bottom: 1em;
+}
+
+.publication-entry {
+	margin-bottom: 1em;
+}
+
+.publication-title {
+	font-weight: bold;
+	color: #191970;
+	margin-bottom: 0.25em;
+}
+
+.publication-title-link {
+	font-weight: bold;
+	color: #191970;
+	text-decoration: none;
+	margin-bottom: 0.1em;
+	display: inline-block;
+}
+
+.publication-title-link:hover {
+	text-decoration: underline;
+}
+
+.publication-authors {
+	font-style: italic;
+	margin-bottom: 0.1em;
+}
+
+.publication-journal {
+	margin-bottom: 0.1em;
+	font-family: monospace;
+}
+
+.publication-link a {
+	color: #007bff;
+	text-decoration: none;
+}
+
+.publication-link a:hover {
+	text-decoration: underline;
+}
+
+.ads-link {
+	color: #007bff;
+	text-decoration: none;
+}
+
+.ads-link:hover {
+	text-decoration: underline;
+}
+
+.publication-date {
+	background: rgba(200, 200, 200, 0.5);
+	padding: 0.25em 0.5em;
+	font-size: 0.9em;
+	display: inline-block;
+	margin-bottom: 0.5em;
+	border-radius: 3px;
+}
+
+.publication-year-box {
+	background: rgba(200, 200, 200, 0.5);
+	padding: 0.25em 0.5em;
+	font-size: 0.9em;
+	font-weight: normal;
+	display: inline-block;
+	margin-bottom: 0.5em;
+	border-radius: 3px;
+	position: relative;
+}
+
+.year {
+	position: relative;
+}
+
+.publications-by-year .year::before {
+	content: '';
+	position: absolute;
+	left: 10px;
+	top: 30px;
+	bottom: 0;
+	width: 2px;
+	background: #007bff;
+}
+
+.year-group {
+	padding-left: 25px;
+	margin-bottom: 1em;
+}
+
+.paper-list {
+	padding-left: 0;
+	list-style: none;
+}
+
+.paper-list li {
+	position: relative;
+	margin-bottom: 1em;
+}
+
 .research-carousel {
 	position: relative;
 }
@@ -3403,7 +3535,7 @@ input, select, textarea {
 
 .carousel-container article .image {
 	flex: 1;
-	min-height: 400px;
+	min-height: 480px;
 }
 
 .carousel-container article .inner {
@@ -3420,7 +3552,7 @@ input, select, textarea {
 }
 
 .carousel-container article .image img {
-	height: 400px;
+	height: 480px;
 	width: 100%;
 	object-fit: cover;
 }
@@ -3450,4 +3582,31 @@ input, select, textarea {
 
 .carousel-next {
 	right: 10px;
+}
+
+/* Responsive styles for mobile */
+@media screen and (max-width: 1024px) {
+	.carousel-container article {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.carousel-container article .image {
+		flex: none;
+		min-height: auto;
+		order: -1; /* Ensure image is above text */
+	}
+
+	.carousel-container article .inner {
+		flex: none;
+		padding-left: 0;
+		padding-top: 1em;
+	}
+
+	.carousel-container article .image img {
+		height: auto;
+		max-height: 360px;
+		width: 100%;
+		object-fit: cover;
+	}
 }
