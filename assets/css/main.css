@@ -1713,7 +1713,7 @@ input, select, textarea {
 	.container {
 		margin: 0 auto;
 		max-width: calc(100% - 4.5em);
-		width: 45em;
+		width: 60em;
 	}
 
 		.container.xsmall {
@@ -1756,6 +1756,14 @@ input, select, textarea {
 
 			.container {
 				max-width: calc(100% - 3.375em);
+			}
+
+		}
+
+		@media screen and (min-width: 1600px) {
+
+			.container {
+				width: 70em;
 			}
 
 		}
