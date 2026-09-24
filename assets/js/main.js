@@ -227,6 +227,9 @@
 	// first enter the viewport. Without IntersectionObserver, show everything immediately.
 		var revealElements = document.querySelectorAll('.reveal');
 
+		// Tells the fail-safe timer in <head> that the reveal logic is running.
+		window.revealReady = true;
+
 		if ('IntersectionObserver' in window) {
 
 			var revealObserver = new IntersectionObserver(function(entries) {

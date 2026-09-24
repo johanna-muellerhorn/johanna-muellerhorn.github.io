@@ -9,7 +9,12 @@
 		<title>Johanna Müller-Horn</title>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<script>document.documentElement.classList.add('js');</script>
+		<script>
+			document.documentElement.classList.add('js');
+			// Fail-safe: if main.js has not set up the reveal animations within 2.5 s (blocked, failed or an
+			// outdated cached copy), show all .reveal content without animation.
+			setTimeout(function() { if (!window.revealReady) document.documentElement.classList.add('reveal-all'); }, 2500);
+		</script>
 		<meta name="description" content="Johanna Müller-Horn, PhD candidate at the Max Planck Institute for Astronomy in Heidelberg, working on binary stars, spectroscopy and dormant black holes." />
 		<meta name="author" content="Johanna Müller-Horn" />
 		<link rel="canonical" href="https://johanna-muellerhorn.github.io/" />
@@ -21,7 +26,7 @@
 		<meta name="twitter:card" content="summary_large_image" />
 		<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png" />
 		<link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
-		<link rel="stylesheet" href="assets/css/main.css" />
+		<link rel="stylesheet" href="assets/css/main.css?v=2026-09-25" />
 		<link rel="stylesheet" href="assets/css/academicons.css" />
 		<meta name="google-site-verification" content="WzFoN_kYrmL-j5h9bXjT-YtK_shj21X29egQoVP4vrk" />
 	</head>
@@ -578,7 +583,7 @@
 			<script src="assets/js/browser.min.js"></script>
 			<script src="assets/js/breakpoints.min.js"></script>
 			<script src="assets/js/util.js"></script>
-			<script src="assets/js/main.js"></script>
+			<script src="assets/js/main.js?v=2026-09-25"></script>
 
 	</body>
 </html>

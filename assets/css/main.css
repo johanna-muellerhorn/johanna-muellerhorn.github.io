@@ -3840,6 +3840,12 @@ html.js .reveal {
 		transform: none;
 	}
 
+	/* Fail-safe (set by the timer in <head> if main.js never started): show everything. */
+	html.reveal-all .reveal {
+		opacity: 1 !important;
+		transform: none !important;
+	}
+
 #one .intro-photo.reveal { --reveal-delay: 0.15s; }
 #one .interest-grid li:nth-child(2) { --reveal-delay: 0.08s; }
 #one .interest-grid li:nth-child(3) { --reveal-delay: 0.16s; }
