@@ -57,7 +57,8 @@
 	// Header Panel.
 
 		// Nav.
-			var $nav_a = $nav.find('a');
+			var $nav_a = $nav.find('a'),
+				unlockTimeout = null;
 
 			$nav_a
 				.addClass('scrolly')
@@ -70,12 +71,24 @@
 							return;
 
 					// Deactivate all links.
-						$nav_a.removeClass('active');
+						$nav_a.removeClass('active active-locked');
 
 					// Activate link *and* lock it (so Scrollex doesn't try to activate other links as we're scrolling to this one's section).
 						$this
 							.addClass('active')
 							.addClass('active-locked');
+
+					// Release the lock once the scroll animation (1000ms) has finished, in case the
+					// target section never reaches the middle of the viewport (e.g. Contact at the page bottom).
+						window.clearTimeout(unlockTimeout);
+						unlockTimeout = window.setTimeout(function() {
+							$this.removeClass('active-locked');
+						}, 1100);
+
+					// Close the slide-out panel (small screens). Scrolly does the scrolling; the panel's own
+					// hideOnClick redirect is disabled because its delayed jump to the anchor made the
+					// highlighted nav item flicker to the previous section mid-scroll.
+						$body.removeClass('header-visible');
 
 				})
 				.each(function() {
@@ -134,7 +147,7 @@
 			$header
 				.panel({
 					delay: 500,
-					hideOnClick: true,
+					hideOnClick: false,
 					hideOnSwipe: true,
 					resetScroll: true,
 					resetForms: true,

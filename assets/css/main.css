@@ -3363,11 +3363,20 @@ input, select, textarea {
 	gap: 2em;
 	padding-bottom: 1em;
 	scroll-snap-type: x mandatory;
+	scrollbar-width: thin;
+	scrollbar-color: #888 #f1f1f1;
 }
 
+/* Year columns: two visible at a time (one on phones), scroll sideways for the rest. */
 .year {
-	flex: 0 0 300px;
+	flex: 0 0 calc((100% - 2em) / 2);
 	scroll-snap-align: start;
+}
+
+@media screen and (max-width: 736px) {
+	.year {
+		flex-basis: 100%;
+	}
 }
 
 .year h5 {

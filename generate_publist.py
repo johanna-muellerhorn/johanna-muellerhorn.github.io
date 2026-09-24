@@ -1,54 +1,70 @@
 """
-generate_publist.py  v2
------------------------
-Queries NASA ADS / SciX for all papers by an author and generates a
-formatted LaTeX publication list, split into first-author and co-author
-sections, with the author's name automatically bolded.
+generate_webpage_publist.py  v1
+--------------------------------
+Queries NASA ADS / SciX for all papers by Johanna Müller-Horn and generates
+the HTML publications section for johanna-muellerhorn.github.io — formatted
+exactly to match the existing <div class="publications-by-year"> structure.
 
-Generates TWO output files in one run:
-  publist_citations.tex    – includes citation counts
-  publist_nocitations.tex  – without citation counts
+TWO integration modes:
+  1. Standalone snippet  →  _publications_snippet.html  (always written)
+  2. In-place update     →  index.html updated directly, if you add the two
+                            marker comments described in HOW TO USE below.
 
-SETUP:
+HOW TO USE:
   pip install ads
+  export ADS_DEV_KEY="your_token"   # from ui.adsabs.harvard.edu/user/settings/token
 
-  Get a free ADS API token at:
-  https://ui.adsabs.harvard.edu/user/settings/token
-  Then set:  export ADS_DEV_KEY="your_token_here"
-  Or paste it directly into ADS_TOKEN below.
+  In your index.html, wrap the publications div with the two marker comments:
+    <!-- PUBLIST:START -->
+    <div class="publications-by-year">
+      ...
+    </div>
+    <!-- PUBLIST:END -->
 
-USAGE:
-  python generate_publist.py
+  Then run:
+    python generate_webpage_publist.py
+
+  The script replaces everything between the markers and writes
+  _publications_snippet.html as a backup.
 """
 
 import ads
 import os
 import re
 from datetime import datetime
+from collections import defaultdict
+from urllib.parse import quote
 
-# ── Configuration ──────────────────────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════════
+# Configuration — edit this section
+# ══════════════════════════════════════════════════════════════════════════════
 
-ADS_TOKEN     = os.environ.get("ADS_DEV_KEY", "kJxCI26lUNiRhI4LeZf4RtjRpm71xCXICAPdUqpu")
-AUTHOR_QUERY  = "Müller-Horn, J"           # ADS author search string
-BOLD_PATTERNS = [                           # strings to match your name in author lists
+ADS_TOKEN    = os.environ.get("ADS_DEV_KEY", "kJxCI26lUNiRhI4LeZf4RtjRpm71xCXICAPdUqpu")
+AUTHOR_QUERY = "Müller-Horn, J"
+
+# Name variants used to identify you as first author
+BOLD_PATTERNS = [
     "Müller-Horn, J",
     "Mueller-Horn, J",
     "Müller-Horn, Johanna",
 ]
-BOLD_SHORT    = r"J.~Müller-Horn"          # short form used in "et al. [N others incl. X]"
-MAX_AUTHORS   = 4                           # authors shown before "et al."
-INCLUDE_ARXIV = True                        # include arXiv-only papers
-MIN_YEAR      = 2018                        # ignore papers before this year (0 = no limit)
 
-# ── arXiv / in-prep paper notes ────────────────────────────────────────────────
-# For papers not yet published, add a note here so it appears after the entry.
-# Key: arXiv ID short form (e.g. "2401.12345") OR ADS bibcode.
-# Value: LaTeX string — will be rendered as italics in parentheses.
+INCLUDE_ARXIV = True   # include arXiv-only / preprint papers
+MIN_YEAR      = 2018   # ignore papers before this year (0 = no limit)
+
+# Wrap your name in <strong> in co-author lists?
+# False matches the current website style (plain text); True adds bold.
+BOLD_NAME_HTML = False
+
+# Path to index.html relative to where you run this script
+INDEX_HTML_PATH = "index.html"
+
+# ── arXiv / accepted paper notes ───────────────────────────────────────────────
+# For preprints and accepted-but-not-published papers, set the text shown
+# in the publication-journal field. Use HTML entities (& → &amp;).
 #
-# Examples:
-#   "2401.12345": r"submitted to \textit{A\&A}",
-#   "2312.67890": r"accepted, \textit{MNRAS}",
-#   "2024arXiv240112345M": r"in preparation",
+# Key:   arXiv short ID (e.g. "2601.14403") OR full ADS bibcode
+# Value: shown verbatim in the publication-journal div
 PAPER_NOTES = {
     "2026arXiv260901822P": r"accepted, \textit{A\&A}",
     "2026arXiv260806453E": r"submitted to \textit{OJAp}",
@@ -56,26 +72,55 @@ PAPER_NOTES = {
     "2026arXiv260726149S": r"submitted to \textit{ApJS}",
 }
 
-# ── ADS query ──────────────────────────────────────────────────────────────────
+# ── Year overrides ─────────────────────────────────────────────────────────────
+# Force a paper into a specific year group, overriding what ADS reports.
+# Useful for papers accepted/published in a later year than their arXiv date.
+#
+# Key:   arXiv short ID or ADS bibcode
+# Value: year string, e.g. "2026"
+PAPER_YEAR_OVERRIDES = {
+    "2510.05982": "2026",   # posted arXiv Oct 2025, accepted A&A 2026
+}
+
+# ── Journal display names (HTML) ───────────────────────────────────────────────
+# These are the abbreviated names shown on the website.
+# Note: "A&A" must be written as "A&amp;A" for valid HTML.
+HTML_JOURNAL_ABBREV = {
+    "The Astrophysical Journal":                   "ApJ",
+    "The Astrophysical Journal Letters":           "ApJ Letters",
+    "The Astrophysical Journal Supplement Series": "ApJS",
+    "Astronomy and Astrophysics":                  "A&amp;A",
+    "Monthly Notices of the Royal Astronomical Society": "MNRAS",
+    "The Astronomical Journal":                    "AJ",
+    "Nature":                                      "Nature",
+    "Nature Astronomy":                            "Nature Astronomy",
+    "Science":                                     "Science",
+    "Publications of the Astronomical Society of the Pacific": "PASP",
+    "arXiv e-prints":                              "arXiv",
+}
+
+# ══════════════════════════════════════════════════════════════════════════════
+# ADS query
+# ══════════════════════════════════════════════════════════════════════════════
 
 def fetch_papers(token: str, author: str) -> list:
     ads.config.token = token
     fields = ["title", "author", "year", "pub", "volume", "page",
               "doi", "identifier", "bibcode", "pubdate", "doctype",
-              "citation_count", "arxiv_class"]
-    results = list(ads.SearchQuery(
+              "citation_count"]
+    return list(ads.SearchQuery(
         q=f'author:"{author}"',
         fl=fields,
         rows=200,
-        sort="date desc"
+        sort="date desc",
     ))
-    return results
 
+# ══════════════════════════════════════════════════════════════════════════════
+# Paper utilities (shared logic with generate_publist.py)
+# ══════════════════════════════════════════════════════════════════════════════
 
-# ── Paper note lookup ──────────────────────────────────────────────────────────
-
-def get_paper_keys(paper) -> list:
-    """Return all possible lookup keys for PAPER_NOTES (bibcode + arXiv IDs)."""
+def get_paper_keys(paper) -> list[str]:
+    """All lookup keys for this paper: bibcode + arXiv ID variants."""
     keys = []
     if paper.bibcode:
         keys.append(paper.bibcode)
@@ -83,144 +128,25 @@ def get_paper_keys(paper) -> list:
         for ident in paper.identifier:
             if "arXiv:" in ident:
                 short = ident.replace("arXiv:", "")
-                keys.append(short)   # "2401.12345"
-                keys.append(ident)   # "arXiv:2401.12345"
+                keys.append(short)       # "2601.14403"
+                keys.append(ident)       # "arXiv:2601.14403"
     return keys
 
-def get_paper_note(paper) -> str | None:
-    """Return the manual note for this paper, or None."""
-    for key in get_paper_keys(paper):
-        if key in PAPER_NOTES:
-            return PAPER_NOTES[key]
+def lookup(mapping: dict, paper) -> str | None:
+    """Return the first matching value in mapping for this paper, or None."""
+    for k in get_paper_keys(paper):
+        if k in mapping:
+            return mapping[k]
     return None
 
-
-# ── Formatting helpers ──────────────────────────────────────────────────────────
-
-JOURNAL_ABBREV = {
-    "The Astrophysical Journal":                   r"ApJ",
-    "The Astrophysical Journal Letters":           r"ApJL",
-    "The Astrophysical Journal Supplement Series": r"ApJS",
-    "Astronomy and Astrophysics":                  r"A\&A",
-    "Monthly Notices of the Royal Astronomical Society": r"MNRAS",
-    "The Astronomical Journal":                    r"AJ",
-    "Nature":                                      r"Nature",
-    "Nature Astronomy":                            r"Nat.\ Astron.",
-    "Science":                                     r"Science",
-    "Publications of the Astronomical Society of the Pacific": r"PASP",
-    "arXiv e-prints":                              r"arXiv",
-}
-
-def abbreviate_journal(journal: str) -> str:
-    if not journal:
-        return ""
-    for full, abbr in JOURNAL_ABBREV.items():
-        if full.lower() in journal.lower():
-            return abbr
-    return journal
-
-def bold_author(name: str) -> str:
-    for pat in BOLD_PATTERNS:
-        if re.search(re.escape(pat), name, re.IGNORECASE):
-            return r"\textbf{" + name + r"}"
-    return name
-
 def is_target_author(name: str) -> bool:
-    for pat in BOLD_PATTERNS:
-        if re.search(re.escape(pat), name, re.IGNORECASE):
-            return True
-    return False
-
-def format_authors(authors: list, max_n: int) -> str:
-    """
-    Format author list. If the target author falls beyond max_n, append
-    "et al. [N others incl. J. Müller-Horn]" so her name is always visible.
-    """
-    if not authors:
-        return "Unknown"
-
-    # Find whether target author appears beyond the shown window
-    hidden_position = None
-    for i, author in enumerate(authors[max_n:], start=max_n):
-        if is_target_author(author):
-            hidden_position = i
-            break
-
-    shown = authors[:max_n]
-    formatted = [bold_author(a) for a in shown]
-    author_str = ", ".join(formatted)
-
-    if len(authors) > max_n:
-        n_hidden = len(authors) - max_n
-        if hidden_position is not None:
-            # Author is hidden behind et al. — make her visible
-            author_str += (
-                r", et~al. ["
-                + str(n_hidden)
-                + r"~others incl.\ \textbf{"
-                + BOLD_SHORT
-                + r"}]"
-            )
-        else:
-            author_str += r", et~al."
-
-    return author_str
-
-def get_doi_url(paper):
-    if paper.doi:
-        doi = paper.doi[0] if isinstance(paper.doi, list) else paper.doi
-        return doi, f"https://doi.org/{doi}"
-    if paper.identifier:
-        for ident in paper.identifier:
-            if ident.startswith("arXiv:"):
-                arxiv_id = ident.replace("arXiv:", "")
-                return arxiv_id, f"https://arxiv.org/abs/{arxiv_id}"
-    return None, None
-
-def format_paper_latex(paper, show_citations: bool) -> str:
-    authors   = format_authors(paper.author or [], MAX_AUTHORS)
-    year      = paper.year or "????"
-    title     = (paper.title[0] if isinstance(paper.title, list)
-                 else paper.title or "Untitled").replace("&", r"\&")
-    journal   = abbreviate_journal(paper.pub or "")
-    volume    = paper.volume or ""
-    page      = (paper.page[0] if isinstance(paper.page, list)
-                 else paper.page) if paper.page else ""
-    doi, url  = get_doi_url(paper)
-    citations = paper.citation_count or 0
-    note      = get_paper_note(paper)
-
-    parts = [f"{authors} ({year}),"]
-    parts.append(r"  \textit{" + title + r"},")
-
-    journal_info = r"  \textit{" + journal + r"}"
-    if volume:
-        journal_info += f", {volume}"
-    if page:
-        journal_info += f", {page}"
-    parts.append(journal_info + ",")
-
-    if url and doi:
-        link_line = r"  \href{" + url + r"}{" + doi + r"}"
-        if show_citations and citations > 0:
-            link_line += f" [cited {citations}\\texttimes]"
-        parts.append(link_line)
-    elif show_citations and citations > 0:
-        parts.append(f"  [cited {citations}\\texttimes]")
-
-    # Append manual note (submitted / accepted / in prep) if present
-    if note:
-        parts.append(r"  \textit{(" + note + r")}")
-
-    return "\n".join(parts)
-
-
-# ── Paper classification ────────────────────────────────────────────────────────
+    return any(
+        re.search(re.escape(p), name, re.IGNORECASE)
+        for p in BOLD_PATTERNS
+    )
 
 def is_first_author(paper) -> bool:
-    if not paper.author:
-        return False
-    return is_target_author(paper.author[0])
+    return bool(paper.author) and is_target_author(paper.author[0])
 
 def is_refereed(paper) -> bool:
     return paper.doctype in ("article", "inbook", "proceedings") or (
@@ -237,80 +163,217 @@ def filter_papers(papers: list) -> list:
         kept.append(p)
     return kept
 
+def paper_year(paper) -> str:
+    """Return the year to use for grouping (honoring PAPER_YEAR_OVERRIDES)."""
+    override = lookup(PAPER_YEAR_OVERRIDES, paper)
+    return override if override else (paper.year or "0000")
 
-# ── LaTeX document builder ──────────────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════════
+# HTML formatting helpers
+# ══════════════════════════════════════════════════════════════════════════════
 
-LATEX_PREAMBLE = r"""\documentclass[11pt]{article}
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
-\usepackage{hyperref}
-\usepackage{enumitem}
-\usepackage[margin=2.5cm]{geometry}
+def he(text: str) -> str:
+    """Minimal HTML escaping for text content (not attributes)."""
+    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
-\hypersetup{
-  colorlinks=true,
-  urlcolor=blue,
-  linkcolor=black,
-}
+def abbreviate_journal(journal: str) -> str:
+    if not journal:
+        return ""
+    for full, abbr in HTML_JOURNAL_ABBREV.items():
+        if full.lower() in journal.lower():
+            return abbr
+    return he(journal)
 
-\begin{document}
+def format_title(paper) -> str:
+    t = paper.title
+    if isinstance(t, list):
+        t = t[0] if t else "Untitled"
+    return he(t or "Untitled")
 
-% ── Auto-generated by generate_publist.py ──
-% Generated: DATE
+def format_authors(paper) -> str:
+    """Full author list, semicolon-separated, optionally with your name in bold."""
+    authors = paper.author or []
+    if not authors:
+        return "Unknown"
+    parts = []
+    for a in authors:
+        escaped = he(a)
+        if BOLD_NAME_HTML and is_target_author(a):
+            parts.append(f"<strong>{escaped}</strong>")
+        else:
+            parts.append(escaped)
+    return " ; ".join(parts)
 
-\section*{List of Publications}
+def format_journal(paper) -> str:
+    """
+    Journal field shown under the title.
+    Priority: PAPER_NOTES entry → formatted journal/volume/page → fallback.
+    """
+    note = lookup(PAPER_NOTES, paper)
+    if note:
+        return note   # already HTML-safe (user writes &amp; directly)
 
-\noindent\textit{Last updated: DATE.}
-\bigskip
+    journal = abbreviate_journal(paper.pub or "")
+    volume  = paper.volume or ""
+    page    = (paper.page[0] if isinstance(paper.page, list) else paper.page) \
+              if paper.page else ""
 
+    if not journal or journal in ("arXiv", ""):
+        return "arXiv preprint"
+
+    parts = [journal]
+    if volume:
+        parts.append(f"Volume {volume}")
+    if page:
+        parts.append(he(str(page)))
+    return " ".join(parts)
+
+def ads_url(bibcode: str) -> str:
+    """ADS abstract URL with URL-encoded bibcode (e.g. A%26A for A&A)."""
+    return f"https://ui.adsabs.harvard.edu/abs/{quote(bibcode, safe='')}/abstract"
+
+# ══════════════════════════════════════════════════════════════════════════════
+# HTML block builders — indentation mirrors the existing index.html structure
+# ══════════════════════════════════════════════════════════════════════════════
+
+I0 = ""          # publications-by-year
+I1 = "\t\t\t\t"  # div.year
+I2 = "\t\t\t\t\t"  # h5, div.year-group
+I3 = "\t\t\t\t\t\t"  # year-box, ul.paper-list
+I4 = "\t\t\t\t\t\t\t"  # li.enumerated-item
+I5 = "\t\t\t\t\t\t\t\t"  # div.publication-entry
+I6 = "\t\t\t\t\t\t\t\t\t"  # content divs inside entry
+
+
+def render_paper(paper) -> str:
+    bibcode = paper.bibcode or ""
+    url     = ads_url(bibcode)
+    title   = format_title(paper)
+    authors = format_authors(paper)
+    journal = format_journal(paper)
+
+    return "\n".join([
+        f'{I4}<li class="enumerated-item">',
+        f'{I5}<div class="publication-entry">',
+        f'{I6}<a href="{url}" class="publication-title-link">'
+            f'{title} <i class="fas fa-external-link-alt external-icon"></i></a>',
+        f'{I6}<div class="publication-authors">{authors}</div>',
+        f'{I6}<div class="publication-journal">{journal}</div>',
+        f'{I6}<div class="publication-link"><a href="{url}">{he(bibcode)}</a></div>',
+        f'{I5}</div>',
+        f'{I4}</li>',
+    ])
+
+
+def render_year_group(year: str, papers: list) -> str:
+    paper_html = "\n".join(render_paper(p) for p in papers)
+    return "\n".join([
+        f'{I2}<div class="year-group">',
+        f'{I3}<div class="publication-year-box">{year}</div>',
+        f'{I3}<ul class="paper-list">',
+        paper_html,
+        f'{I3}</ul>',
+        f'{I2}</div>',
+    ])
+
+
+def render_section(label: str, papers: list) -> str:
+    """One <div class="year"> section with year subgroups."""
+    # Group by display year, preserve descending sort
+    by_year: dict[str, list] = defaultdict(list)
+    for p in papers:
+        by_year[paper_year(p)].append(p)
+
+    year_groups = "\n".join(
+        render_year_group(yr, by_year[yr])
+        for yr in sorted(by_year.keys(), reverse=True)
+    )
+
+    return "\n".join([
+        f'{I1}<div class="year">',
+        f'{I2}<h5>{label}</h5>',
+        year_groups,
+        f'{I1}</div>',
+    ])
+
+
+def build_snippet(first_author: list, co_author: list) -> str:
+    today = datetime.today().strftime("%B %Y")
+    return "\n".join([
+        f'<!-- Publications generated by generate_webpage_publist.py — {today} -->',
+        f'<div class="publications-by-year">',
+        render_section("First-author papers", first_author),
+        render_section("Co-author papers",    co_author),
+        f'</div>',
+        f'<!-- End of generated publications -->',
+    ])
+
+# ══════════════════════════════════════════════════════════════════════════════
+# index.html in-place updater
+# ══════════════════════════════════════════════════════════════════════════════
+
+START_MARKER = "<!-- PUBLIST:START -->"
+END_MARKER   = "<!-- PUBLIST:END -->"
+
+_MARKER_INSTRUCTIONS = f"""
+  To enable auto-update of index.html, wrap your publications div with:
+
+    {START_MARKER}
+    <div class="publications-by-year">
+      ...existing content...
+    </div>
+    {END_MARKER}
+
+  Then re-run this script. Everything between the markers will be replaced.
 """
 
-LATEX_FOOTER = r"""
-\end{document}
-"""
+def update_index_html(snippet: str, path: str) -> bool:
+    if not os.path.exists(path):
+        print(f"  ℹ️  {path} not found — only snippet file written.")
+        return False
 
-def build_latex(first_author_papers: list, coauthor_papers: list,
-                show_citations: bool) -> str:
-    today  = datetime.today().strftime("%B %Y")
-    header = LATEX_PREAMBLE.replace("DATE", today)
+    with open(path, "r", encoding="utf-8") as f:
+        content = f.read()
 
-    lines = [header]
+    if START_MARKER not in content or END_MARKER not in content:
+        print(f"  ℹ️  Marker comments not found in {path}.")
+        print(_MARKER_INSTRUCTIONS)
+        return False
 
-    # ── First-author section ──
-    lines.append(r"\subsection*{First-Author Papers}")
-    if first_author_papers:
-        lines.append(r"\begin{enumerate}[leftmargin=*, label={[\arabic*]}, itemsep=6pt]")
-        for p in first_author_papers:
-            lines.append(r"\item " + format_paper_latex(p, show_citations))
-        lines.append(r"\end{enumerate}")
-    else:
-        lines.append(r"\textit{No first-author papers found.}")
-    lines.append("")
+    # Replace everything between (and including) the markers
+    pattern  = re.escape(START_MARKER) + r".*?" + re.escape(END_MARKER)
+    replaced = re.sub(
+        pattern,
+        f"{START_MARKER}\n{snippet}\n{END_MARKER}",
+        content,
+        flags=re.DOTALL,
+    )
 
-    # ── Co-author section ──
-    lines.append(r"\subsection*{Co-Authored Papers}")
-    if coauthor_papers:
-        lines.append(r"\begin{enumerate}[leftmargin=*, label={[\arabic*]}, itemsep=6pt]")
-        for p in coauthor_papers:
-            lines.append(r"\item " + format_paper_latex(p, show_citations))
-        lines.append(r"\end{enumerate}")
-    else:
-        lines.append(r"\textit{No co-authored papers found.}")
+    # Safety check: don't write if nothing changed or pattern matched twice
+    if replaced == content:
+        print(f"  ℹ️  {path} is already up to date.")
+        return True
+    if replaced.count(START_MARKER) != 1:
+        print(f"  ⚠️  Multiple marker pairs found in {path} — not updating. Check your HTML.")
+        return False
 
-    lines.append(LATEX_FOOTER)
-    return "\n".join(lines)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(replaced)
 
+    print(f"  ✅  {path} updated in place.")
+    return True
 
-# ── Main ───────────────────────────────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════════
+# Main
+# ══════════════════════════════════════════════════════════════════════════════
 
 def main():
-    print(f"Querying ADS for author: {AUTHOR_QUERY} ...")
+    print(f"Querying ADS for: {AUTHOR_QUERY} ...")
 
     if ADS_TOKEN == "YOUR_TOKEN_HERE":
-        print("\n⚠️  No ADS API token set.")
-        print("   Get one free at: https://ui.adsabs.harvard.edu/user/settings/token")
-        print("   Then set:  export ADS_DEV_KEY='your_token'")
-        print("   Or paste it into ADS_TOKEN at the top of this script.\n")
+        print("\n⚠️  No ADS token set.")
+        print("   Get one at: https://ui.adsabs.harvard.edu/user/settings/token")
+        print("   Then:  export ADS_DEV_KEY='your_token'\n")
         return
 
     papers = fetch_papers(ADS_TOKEN, AUTHOR_QUERY)
@@ -321,33 +384,41 @@ def main():
     co_author    = [p for p in papers if not is_first_author(p)]
     print(f"  First-author: {len(first_author)},  Co-author: {len(co_author)}")
 
-    # Warn about any arXiv-only papers with no note set
-    arxiv_only = [
+    # Remind about arXiv papers without notes
+    arxiv_without_note = [
         p for p in papers
-        if p.doctype == "eprint" and get_paper_note(p) is None
+        if p.doctype == "eprint" and lookup(PAPER_NOTES, p) is None
     ]
-    if arxiv_only:
-        print(f"\n  ℹ️  {len(arxiv_only)} arXiv-only paper(s) have no status note.")
-        print("  Add entries to PAPER_NOTES in the config section to annotate them:")
-        for p in arxiv_only:
-            keys = get_paper_keys(p)
-            title_short = (p.title[0] if p.title else "???")[:60]
+    if arxiv_without_note:
+        print(f"\n  ℹ️  {len(arxiv_without_note)} arXiv-only paper(s) with no PAPER_NOTES entry "
+              f"(will show as 'arXiv preprint'):")
+        for p in arxiv_without_note:
+            keys   = get_paper_keys(p)
+            title  = (p.title[0] if p.title else "???")[:65]
             print(f"    Keys: {keys}")
-            print(f"    Title: {title_short}...")
+            print(f"    → {title}")
 
-    # Generate both versions
-    outputs = [
-        ("publist_citations.tex",   True,  "with citations"),
-        ("publist_nocitations.tex", False, "without citations"),
-    ]
-    for filename, show_cit, label in outputs:
-        latex = build_latex(first_author, co_author, show_citations=show_cit)
-        with open(filename, "w", encoding="utf-8") as f:
-            f.write(latex)
-        print(f"\n✅  {filename}  ({label})")
+    # Report year overrides applied
+    overridden = [p for p in papers if lookup(PAPER_YEAR_OVERRIDES, p)]
+    if overridden:
+        print(f"\n  📅  Year overrides applied:")
+        for p in overridden:
+            yr = lookup(PAPER_YEAR_OVERRIDES, p)
+            print(f"    {p.bibcode}: ADS year {p.year} → displayed as {yr}")
 
-    print("\nCompile with:  pdflatex publist_citations.tex")
-    print("Or use:        \\input{publist_citations.tex}  in your CV.")
+    snippet = build_snippet(first_author, co_author)
+
+    # Always write standalone snippet
+    snippet_path = "_publications_snippet.html"
+    with open(snippet_path, "w", encoding="utf-8") as f:
+        f.write(snippet)
+    print(f"\n  ✅  {snippet_path} written.")
+
+    # Try to update index.html in place
+    update_index_html(snippet, INDEX_HTML_PATH)
+
+    print("\nDone.")
+    print(f"Compile check: open {snippet_path} in a browser to preview the snippet.")
 
 
 if __name__ == "__main__":
