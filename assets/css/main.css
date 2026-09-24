@@ -6,9 +6,32 @@
 	Read Only by HTML5 UP
 	html5up.net | @ajlkn
 	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
-	color used before: #191970 for buttons and #0b0b3a for background
-	now using: #282442 for buttons and #131122 for background
 */
+
+/* ==========================================================================
+   COLOUR CONFIG: change the site's theme colours here.
+   Every custom colour below is used via var(--name). Previous values are
+   noted in the comments so they can be switched back easily.
+   ========================================================================== */
+
+:root {
+	/* Accent: link hover colour and "Send Message" button hover. */
+	--accent: #c71585;             /* matplotlib mediumvioletred. Previous: #847bc7 (light purple) */
+	--accent-active: #9f116a;      /* pressed button (darker accent). Previous: #8073de */
+
+	/* Primary: buttons, "Hi!" heading, list-icon bullets, active nav item, form focus. */
+	--primary: #282442;            /* Earlier: #191970 */
+
+	/* Headings: publication, talk and research titles. */
+	--title: #191970;              /* midnightblue */
+
+	/* Links in the publication and talk lists, and the timeline bar in Publications. */
+	--link: #007bff;
+
+	/* Left sidebar (header panel). */
+	--sidebar-bg: #131122;         /* Earlier: #0b0b3a */
+	--sidebar-text: #ededfc;
+}
 
 html, body, div, span, applet, object,
 iframe, h1, h2, h3, h4, h5, h6, p, blockquote,
@@ -120,7 +143,7 @@ input, select, textarea {
 
 		a:hover {
 			border-bottom-color: transparent;
-			color: #847bc7 !important;
+			color: var(--accent) !important;
 		}
 
 	strong, b {
@@ -1801,7 +1824,7 @@ input, select, textarea {
 	}
 
 	header.major h2 {
-		color: #282442;
+		color: var(--primary);
 		font-size: 3.5em;
 	}
 
@@ -1864,7 +1887,7 @@ input, select, textarea {
 		input[type="email"]:focus,
 		select:focus,
 		textarea:focus {
-			border-color: #282442;
+			border-color: var(--primary);
 		}
 
 	select {
@@ -1969,7 +1992,7 @@ input, select, textarea {
 
 		input[type="checkbox"]:focus + label:before,
 		input[type="radio"]:focus + label:before {
-			border-color: #282442;
+			border-color: var(--primary);
 		}
 
 	input[type="checkbox"] + label:before {
@@ -2419,7 +2442,7 @@ input, select, textarea {
 			}
 
 			ul.feature-icons li:before {
-				background: #282442;
+				background: var(--primary);
 				border-radius: 100%;
 				color: #ffffff;
 				display: block;
@@ -2636,7 +2659,7 @@ input, select, textarea {
 		input[type="reset"].primary,
 		input[type="button"].primary,
 		.button.primary {
-			background-color: #282442;
+			background-color: var(--primary);
 			color: #ffffff !important;
 		}
 
@@ -2644,14 +2667,14 @@ input, select, textarea {
 			input[type="reset"].primary:hover,
 			input[type="button"].primary:hover,
 			.button.primary:hover {
-				background-color: #847bc7;
+				background-color: var(--accent);
 			}
 
 			input[type="submit"].primary:active,
 			input[type="reset"].primary:active,
 			input[type="button"].primary:active,
 			.button.primary:active {
-				background-color: #8073de;
+				background-color: var(--accent-active);
 			}
 
 		input[type="submit"].disabled, input[type="submit"]:disabled,
@@ -2718,8 +2741,8 @@ input, select, textarea {
 		-webkit-justify-content: space-between;
 		-ms-justify-content: space-between;
 		justify-content: space-between;
-		background: #131122;
-		color: #ededfc;
+		background: var(--sidebar-bg);
+		color: var(--sidebar-text);
 		height: 100%;
 		overflow-y: auto;
 		position: fixed;
@@ -2742,7 +2765,7 @@ input, select, textarea {
 		}
 
 		#header a {
-			color: #ededfc;
+			color: var(--sidebar-text);
 		}
 
 			#header a:hover {
@@ -2769,7 +2792,7 @@ input, select, textarea {
 			}
 
 			#header > header p {
-				color: #ededfc;
+				color: var(--sidebar-text);
 				font-style: italic;
 				margin: 1em 0 0 0;
 			}
@@ -2790,7 +2813,7 @@ input, select, textarea {
 			}
 
 				#header > footer .icons li a {
-					color: #ededfc;
+					color: var(--sidebar-text);
 				}
 
 		#header > nav {
@@ -2807,7 +2830,7 @@ input, select, textarea {
 			}
 
 				#header > nav ul li {
-					border-top: solid 2px #131122;
+					border-top: solid 2px var(--sidebar-bg);
 					display: block;
 					padding: 0;
 				}
@@ -2826,7 +2849,7 @@ input, select, textarea {
 
 						#header > nav ul li a.active {
 							background: #fff;
-							color: #282442 !important;
+							color: var(--primary) !important;
 						}
 
 					#header > nav ul li:first-child {
@@ -3094,7 +3117,7 @@ input, select, textarea {
 					}
 
 					#titleBar .toggle:before {
-						background: #282442;
+						background: var(--primary);
 						color: #ffffff;
 						content: '\f0c9';
 						display: block;
@@ -3376,7 +3399,7 @@ input, select, textarea {
 
 .talk-title {
 	font-weight: bold;
-	color: #191970;
+	color: var(--title);
 	margin-bottom: 0.25em;
 }
 
@@ -3391,7 +3414,7 @@ input, select, textarea {
 }
 
 .talk-type a {
-	color: #007bff;
+	color: var(--link);
 	text-decoration: none;
 }
 
@@ -3429,13 +3452,13 @@ input, select, textarea {
 
 .publication-title {
 	font-weight: bold;
-	color: #191970;
+	color: var(--title);
 	margin-bottom: 0.25em;
 }
 
 .publication-title-link {
 	font-weight: bold;
-	color: #191970;
+	color: var(--title);
 	text-decoration: none;
 	margin-bottom: 0.1em;
 	display: inline-block;
@@ -3443,6 +3466,11 @@ input, select, textarea {
 
 .publication-title-link:hover {
 	text-decoration: underline;
+}
+
+.external-icon {
+	font-size: 0.8em;
+	margin-left: 0.5em;
 }
 
 .publication-authors {
@@ -3456,7 +3484,7 @@ input, select, textarea {
 }
 
 .publication-link a {
-	color: #007bff;
+	color: var(--link);
 	text-decoration: none;
 }
 
@@ -3465,7 +3493,7 @@ input, select, textarea {
 }
 
 .ads-link {
-	color: #007bff;
+	color: var(--link);
 	text-decoration: none;
 }
 
@@ -3504,7 +3532,7 @@ input, select, textarea {
 	top: 30px;
 	bottom: 0;
 	width: 2px;
-	background: #007bff;
+	background: var(--link);
 }
 
 .year-group {
@@ -3552,7 +3580,7 @@ input, select, textarea {
 }
 
 .carousel-container article .inner h4 {
-	color: #191970;
+	color: var(--title);
 }
 
 .carousel-container article .inner h4 a {

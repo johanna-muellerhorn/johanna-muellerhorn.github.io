@@ -159,15 +159,26 @@
 	// Research Carousel.
 		var $carouselContainer = $('.carousel-container');
 		var $articles = $carouselContainer.find('article');
-		var containerWidth = $carouselContainer.width();
-		var gapPx = 32; // 2em gap
 		var totalSlides = $articles.length;
 		var currentSlide = 0;
 
+		// Distance between slides (article width + CSS gap), measured on demand so it stays correct after resizing.
+		function slideOffset(slideIndex) {
+			if (!totalSlides)
+				return 0;
+
+			return $articles[slideIndex].offsetLeft - $articles[0].offsetLeft;
+		}
+
 		function goToSlide(slideIndex) {
-			$carouselContainer.animate({scrollLeft: slideIndex * (containerWidth + gapPx)}, 1000, 'linear');
+			$carouselContainer.stop().animate({scrollLeft: slideOffset(slideIndex)}, 1000, 'linear');
 			currentSlide = slideIndex;
 		}
+
+		// Keep the current slide aligned when the window is resized.
+		$window.on('resize', function() {
+			$carouselContainer.stop().scrollLeft(slideOffset(currentSlide));
+		});
 
 		$('.carousel-prev').on('click', function() {
 			var nextSlide = (currentSlide - 1 + totalSlides) % totalSlides;
