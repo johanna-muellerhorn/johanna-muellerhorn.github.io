@@ -223,4 +223,30 @@
 			}, 10000);
 		});
 
+	// Reveal on first view (intro section): .reveal elements slide/fade in once when they
+	// first enter the viewport. Without IntersectionObserver, show everything immediately.
+		var revealElements = document.querySelectorAll('.reveal');
+
+		if ('IntersectionObserver' in window) {
+
+			var revealObserver = new IntersectionObserver(function(entries) {
+				entries.forEach(function(entry) {
+
+					if (!entry.isIntersecting)
+						return;
+
+					entry.target.classList.add('is-visible');
+					revealObserver.unobserve(entry.target);
+
+				});
+			}, { threshold: 0.15 });
+
+			revealElements.forEach(function(el) {
+				revealObserver.observe(el);
+			});
+
+		}
+		else
+			$(revealElements).addClass('is-visible');
+
 })(jQuery);
