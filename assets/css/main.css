@@ -3949,3 +3949,148 @@ html.js .reveal {
 		transition: none;
 	}
 }
+
+/* ==========================================================================
+   CV SECTION (#cv): one card per subsection (Current Position, Research
+   Experience, Education, Honours & Awards). Each entry: accent date badge on
+   the left; bold title, institution line with icon, and hollow-circle notes
+   on the right. Layout modelled on annadeg.github.io/cv, styled like the intro.
+   ========================================================================== */
+
+#cv .cv-card {
+	margin: 0 0 1.75em 0;
+	padding: 1.75em 2em 0.75em 2em;
+	background: #fff;
+	border: 1px solid #e4e4e4;
+	border-radius: 1em;
+	box-shadow: 0 1em 2em -1.5em var(--shadow);
+	transition: box-shadow 0.3s ease;
+}
+
+	#cv .cv-card:hover {
+		box-shadow: 0 1.25em 2.5em -1.25em var(--shadow);
+	}
+
+	/* Card heading: same small-caps style with hairline as "Key Interests" */
+	#cv .cv-card h4 {
+		display: flex;
+		align-items: center;
+		gap: 1em;
+		margin: 0 0 1em 0;
+		color: var(--primary);
+		font-size: 0.85em;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+	}
+
+		#cv .cv-card h4::after {
+			content: '';
+			flex: 1;
+			height: 1px;
+			background: #e4e4e4;
+		}
+
+#cv .cv-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+#cv .cv-entry {
+	display: grid;
+	grid-template-columns: 8em minmax(0, 1fr);
+	gap: 1.75em;
+	margin: 0;
+	padding: 1.1em 0;
+	border-top: 1px solid #f4f4f4;
+}
+
+	#cv .cv-entry:first-child {
+		border-top: 0;
+		padding-top: 0.25em;
+	}
+
+/* Date badge (all badges share the column width, so they line up) */
+#cv .cv-date {
+	align-self: start;
+	margin-top: 0.15em;
+	padding: 0.35em 0.6em;
+	border-radius: 999px;
+	background: var(--accent);
+	color: #fff;
+	font-size: 0.75em;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	line-height: 1.4;
+	text-align: center;
+	white-space: nowrap;
+}
+
+#cv .cv-title {
+	margin: 0 0 0.3em 0;
+	color: var(--primary);
+	font-size: 1em;
+	font-weight: 700;
+	letter-spacing: 0;
+	line-height: 1.4;
+	text-transform: none;
+}
+
+#cv .cv-place {
+	margin: 0;
+	padding-left: 1.65em; /* hanging indent: wrapped lines align with the text, not the icon */
+	text-indent: -1.65em;
+	font-size: 0.95em;
+	line-height: 1.5;
+}
+
+	#cv .cv-place i {
+		width: 1.1em;
+		margin-right: 0.55em;
+		color: var(--accent);
+		text-align: center;
+	}
+
+#cv .cv-notes {
+	list-style: none;
+	margin: 0.55em 0 0 0;
+	padding: 0;
+}
+
+	#cv .cv-notes li {
+		position: relative;
+		margin: 0 0 0.2em 0;
+		padding: 0 0 0 1.25em;
+		font-size: 0.92em;
+		line-height: 1.55;
+	}
+
+		/* Hollow accent-coloured circle bullets */
+		#cv .cv-notes li::before {
+			content: '';
+			position: absolute;
+			top: 0.55em;
+			left: 0.1em;
+			width: 0.42em;
+			height: 0.42em;
+			box-sizing: border-box;
+			border: 1.5px solid var(--accent);
+			border-radius: 50%;
+		}
+
+@media screen and (max-width: 736px) {
+	#cv .cv-card {
+		padding: 1.25em 1.25em 0.5em 1.25em;
+	}
+
+	/* Stack: badge above the entry */
+	#cv .cv-entry {
+		grid-template-columns: 1fr;
+		gap: 0.6em;
+	}
+
+	#cv .cv-date {
+		justify-self: start;
+		padding: 0.35em 0.9em;
+	}
+}
