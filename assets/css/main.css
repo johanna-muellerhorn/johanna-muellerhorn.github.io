@@ -34,6 +34,9 @@
 
 	/* Soft shadows in the intro section (photo, hovered interest cards). */
 	--shadow: rgba(19, 17, 34, 0.35);
+
+	/* Brief flash on a paper reached from an intro card (pale --accent). */
+	--highlight: rgba(199, 21, 133, 0.1);
 }
 
 html, body, div, span, applet, object,
@@ -3660,7 +3663,7 @@ input, select, textarea {
 }
 
 /* ==========================================================================
-   INTRO SECTION (#one): text + arch-shaped photo, key-interest cards,
+   INTRO SECTION (#one): text + arch-shaped photo, key-interest/skill cards,
    slide-in animations. Scoped to #one so the other sections are unaffected.
    ========================================================================== */
 
@@ -3735,7 +3738,15 @@ input, select, textarea {
 		border-radius: 50% 50% 1.25em 1.25em / 37.5% 37.5% 1.25em 1.25em;
 	}
 
-/* Key interests: small-caps heading with a hairline, grid of cards */
+/* Key interests | key skills: two columns, each a small-caps heading with a hairline
+   above a stack of cards */
+#one .interests {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 0 2.5em;
+	margin-bottom: 2.5em;
+}
+
 #one .interests h4 {
 	display: flex;
 	align-items: center;
@@ -3756,10 +3767,10 @@ input, select, textarea {
 
 #one .interest-grid {
 	display: grid;
-	grid-template-columns: repeat(3, minmax(0, 1fr));
-	gap: 1em;
+	grid-template-columns: minmax(0, 1fr);
+	gap: 0.75em;
 	list-style: none;
-	margin: 0 0 2.5em 0;
+	margin: 0;
 	padding: 0;
 }
 
@@ -3774,7 +3785,7 @@ input, select, textarea {
 	gap: 1em;
 	box-sizing: border-box;
 	height: 100%;
-	padding: 0.95em 1.15em;
+	padding: 0.55em 1.15em;
 	background: #fff;
 	border: 1px solid #e4e4e4;
 	border-radius: 1em;
@@ -3786,11 +3797,12 @@ input, select, textarea {
 
 	#one .interest-icon {
 		display: flex;
-		flex: 0 0 2.6em;
+		flex: 0 0 2.2em;
 		align-items: center;
 		justify-content: center;
-		width: 2.6em;
-		height: 2.6em;
+		width: 2.2em;
+		height: 2.2em;
+		font-size: 0.9em;
 		border-radius: 50%;
 		background: var(--primary);
 		color: #fff;
@@ -3807,6 +3819,37 @@ input, select, textarea {
 			transform: scale(1.25);
 			background: var(--accent);
 		}
+
+/* Cards that link to a paper (a.interest; the ids come from PAPER_ANCHORS in generate_publist.py):
+   small arrow on the right that nudges down on hover */
+#one .interest-go {
+	margin-left: auto;
+	color: #aaa;
+	font-size: 0.85em;
+	transition: transform 0.3s ease, color 0.3s ease;
+}
+
+	#one a.interest:hover .interest-go {
+		transform: translateY(3px);
+		color: var(--accent);
+	}
+
+/* The paper itself: brief --highlight flash after the scroll (class set by main.js) */
+.paper-list li.is-highlighted {
+	border-radius: 0.5em;
+	animation: paper-highlight 2.5s ease-out;
+}
+
+@keyframes paper-highlight {
+	0%, 35% {
+		background: var(--highlight);
+		box-shadow: 0 0 0 0.6em var(--highlight);
+	}
+	100% {
+		background: transparent;
+		box-shadow: 0 0 0 0.6em transparent;
+	}
+}
 
 #one .image-credit {
 	margin: 0;
@@ -3850,8 +3893,6 @@ html.js .reveal {
 #one .interest-grid li:nth-child(2) { --reveal-delay: 0.08s; }
 #one .interest-grid li:nth-child(3) { --reveal-delay: 0.16s; }
 #one .interest-grid li:nth-child(4) { --reveal-delay: 0.24s; }
-#one .interest-grid li:nth-child(5) { --reveal-delay: 0.32s; }
-#one .interest-grid li:nth-child(6) { --reveal-delay: 0.40s; }
 
 @media (prefers-reduced-motion: reduce) {
 	html.js .reveal {
@@ -3861,7 +3902,8 @@ html.js .reveal {
 	}
 
 	#one .interest,
-	#one .interest-icon {
+	#one .interest-icon,
+	#one .interest-go {
 		transition: none;
 	}
 }
@@ -3876,10 +3918,6 @@ html.js .reveal {
 @media screen and (max-width: 1280px) {
 	#one .intro {
 		gap: 2.5em;
-	}
-
-	#one .interest-grid {
-		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 }
 
@@ -3906,11 +3944,10 @@ html.js .reveal {
 	#one header.major h2 + p {
 		font-size: 1.2em;
 	}
-}
 
-@media screen and (max-width: 480px) {
-	#one .interest-grid {
-		grid-template-columns: 1fr;
+	/* Key skills below key interests */
+	#one .interests {
+		grid-template-columns: minmax(0, 1fr);
 	}
 }
 

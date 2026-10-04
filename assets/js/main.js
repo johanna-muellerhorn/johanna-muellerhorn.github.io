@@ -169,6 +169,34 @@
 			}
 		});
 
+	// Intro cards that link to a paper: smooth-scroll to it (with some room above, so the
+	// highlight isn't cut off at the top edge), then flash it.
+		$('a.interest[href^="#"]').on('click', function(event) {
+
+			var $target = $($(this).attr('href'));
+
+			if ($target.length == 0)
+				return;
+
+			event.preventDefault();
+
+			var top = $target.offset().top - 60;
+
+			if (breakpoints.active('<=medium'))
+				top -= $titleBar.height();
+
+			$('html, body').stop().animate({ scrollTop: top }, 1000).promise().done(function() {
+				$target.removeClass('is-highlighted');
+				void $target[0].offsetWidth; // restarts the animation on a repeated click
+				$target.addClass('is-highlighted');
+			});
+
+		});
+
+		$('.paper-list').on('animationend', 'li', function() {
+			$(this).removeClass('is-highlighted');
+		});
+
 	// Research Carousel.
 		var $carouselContainer = $('.carousel-container');
 		var $articles = $carouselContainer.find('article');
