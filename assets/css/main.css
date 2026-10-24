@@ -3516,6 +3516,16 @@ input, select, textarea {
 	text-decoration: underline;
 }
 
+/* Summary line at the top of Publications (generated) and Talks: "7 first-author papers, ..." */
+.section-summary {
+	margin-bottom: 1.5em;
+	color: #777;
+}
+
+.section-summary strong {
+	color: var(--title);
+}
+
 .publication-date {
 	background: rgba(200, 200, 200, 0.5);
 	padding: 0.25em 0.5em;
